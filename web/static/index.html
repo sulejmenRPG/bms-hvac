@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BMS SCADA | Диспетчеризация кондитерского цеха</title>
+  <link rel="icon" href="data:,">
+  
+  <!-- Typography: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Three.js r128 + OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  
+  <!-- Industrial SCADA Styling -->
+  <link rel="stylesheet" href="/static/css/bms.css">
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Top System Telemetry Bar -->
+    <header class="top-bar">
+      <div class="brand-block">
+        <span class="dot-online"></span>
+        <span class="brand-title">BMS Диспетчеризация</span>
+        <span class="tag-pill">Кондитерский цех №1</span>
+        <span class="tag-pill mono">Алматы</span>
+      </div>
+      <div class="telemetry-row mono">
+        <div class="telemetry-item">Связь: <b>RS-485 Modbus TCP</b></div>
+        <div class="telemetry-item">Пакеты: <b id="stat-packets">0 / 0</b></div>
+        <div class="telemetry-item" style="cursor: pointer;" onclick="toggleNight()" title="Кликните для переключения смены">Смена: <b id="stat-shift" style="color: var(--green-light);">ДЕНЬ (19.0°C)</b></div>
+        <div class="telemetry-item">Аптайм: <b id="stat-uptime">00:00:00</b></div>
+      </div>
+    </header>
+
+    <!-- Industrial 3D BIM Factory Digital Twin -->
+    <div class="bim-card">
+      
+      <!-- Top Title and Camera Controls -->
+      <div class="bim-header">
+        <div class="bim-title-block">
+          <span class="dot-active"></span>
+          <span class="map-title">3D BIM Цифровой двойник цеха</span>
+          <span class="bim-subtitle">Вентиляция HVAC и технологические контуры</span>
+        </div>
+        <div class="bim-controls-bar">
+          <button class="btn-cam active" id="btn-cam-iso" onclick="setCameraView('iso')">Изометрия</button> <button class="btn-cam" id="btn-cam-panels" onclick="setCameraView('panels')">Щиты (ЩА/ШУВ)</button>
+          <button class="btn-cam" id="btn-cam-z1" onclick="setCameraView('z1')">Печи (З1)</button> <button class="btn-cam" id="btn-cam-z2" onclick="setCameraView('z2')">Шоколад (З2)</button>
+          <button class="btn-cam" id="btn-cam-z3" onclick="setCameraView('z3')">Склад (З3)</button> <button class="btn-cam" id="btn-cam-top" onclick="setCameraView('top')">План сверху</button>
+          <button class="btn-cam" id="btn-cam-night" onclick="toggleNight()" style="border-color: rgba(56, 139, 253, 0.45); color: var(--blue-light);">День / Ночь</button> <button class="btn-cam" id="btn-cam-reset" onclick="resetCamera()">Сброс</button>
+        </div>
+      </div>
+
+      <!-- 3D WebGL Viewport Container with Minimal Glassmorphic HUD -->
+      <div class="bim-viewport-wrapper">
+        <canvas id="bimCanvas"></canvas>
+
+        <!-- Hover Tooltip -->
+        <div class="bim-hover-tooltip" id="bim-hover-tooltip"></div>
+
+        <!-- Floating Equipment Inspector Drawer -->
+        <div class="bim-inspector" id="bim-inspector">
+          <div class="inspector-hdr">
+            <div class="inspector-title-wrap">
+              <span class="inspector-dot" id="insp-dot"></span>
+              <span class="inspector-title" id="insp-title">Оборудование</span>
+            </div>
+            <button class="btn-inspector-close" onclick="deselectObject()">✕</button>
+          </div>
+          <div class="inspector-zone" id="insp-zone">Технологический узел</div>
+          <div class="inspector-body">
+            <div class="inspector-row"><span class="inspector-lbl">Шина Modbus:</span><span class="inspector-val mono" id="insp-modbus">HR 0000</span></div>
+            <div class="inspector-row"><span class="inspector-lbl">Статус:</span><span class="inspector-val" id="insp-status" style="color: var(--green-light);">Штатно</span></div>
+            <div class="inspector-telem-card">
+              <div class="inspector-telem-hdr"><span>Параметры и телеметрия</span><span class="dot-indicator dot-blue"></span></div>
+              <div class="inspector-telem-val mono" id="insp-telemetry">--</div>
+            </div>
+            <div class="inspector-desc" id="insp-desc">Описание технологического узла</div>
+            <div class="inspector-actions" id="insp-actions"><button class="btn-inspector-action" id="insp-btn-focus" onclick="focusSelectedObject()">Фокус камеры</button></div>
+          </div>
+        </div>
+
+        <!-- Sleek Minimalist BIM HUD (Zero Screen Blockage) -->
+        <div class="bim-hud-overlay">
+          <!-- Top Minimal Floating Ribbon -->
+          <div class="bim-hud-top-bar">
+            <!-- Quick Zone Telemetry Strip -->
+            <div class="hud-quick-strip mono">
+              <div class="quick-zone-item"><span class="dot-indicator dot-red"></span><span class="quick-zone-name">Выпечка:</span><span class="quick-zone-val" id="hud-z1-temp">--.- °C</span><span class="quick-zone-sub" id="hud-z1-hum">-- %</span></div>
+              <div class="quick-sep"></div>
+              <div class="quick-zone-item"><span class="dot-indicator dot-blue"></span><span class="quick-zone-name">Шоколад:</span><span class="quick-zone-val" id="hud-z2-temp">--.- °C</span><span class="quick-zone-sub" id="hud-z2-ac">Чиллер --%</span></div>
+              <div class="quick-sep"></div>
+              <div class="quick-zone-item"><span class="dot-indicator dot-teal"></span><span class="quick-zone-name">Склад:</span><span class="quick-zone-val" id="hud-z3-hum">-- %</span><span class="quick-zone-sub" id="hud-z3-temp">--.- °C</span></div>
+            </div>
+
+            <!-- System Isolation Modes Bar (Ghost / Inspection Mode) -->
+            <div class="hud-modes-strip">
+              <span class="hud-modes-label">Слои:</span>
+              <button class="btn-mode active" id="btn-mode-all" onclick="setBIMIsolationMode('all')">Все</button>
+              <button class="btn-mode" id="btn-mode-lighting" onclick="setBIMIsolationMode('lighting')">Свет</button>
+              <button class="btn-mode" id="btn-mode-thermal" onclick="setBIMIsolationMode('thermal')">Печи</button>
+              <button class="btn-mode" id="btn-mode-cooling" onclick="setBIMIsolationMode('cooling')">Чиллер</button>
+              <button class="btn-mode" id="btn-mode-hvac" onclick="setBIMIsolationMode('hvac')">Вент (HVAC)</button>
+            </div>
+
+            <!-- Live Controller Status Chip -->
+            <div class="hud-status-chip">
+              <span class="status-badge badge-ok" id="action-status-badge">НОРМА</span>
+              <span class="hud-status-text" id="action-summary-text">Контуры в допуске</span>
+            </div>
+          </div>
+
+          <!-- Bottom Discreet Legend & Hints -->
+          <div class="bim-hud-bottom">
+            <div class="hud-legend">
+              <div class="hud-legend-item"><span class="legend-color legend-vav"></span><span>VAV / AHU</span></div>
+              <div class="hud-legend-item"><span class="legend-color legend-duct"></span><span>Воздуховоды</span></div>
+              <div class="hud-legend-item"><span class="legend-color legend-diff"></span><span>Диффузоры</span></div>
+              <div class="hud-legend-item"><span class="legend-color legend-panel"></span><span>Щиты (ЩА/ШУВ/ВРУ)</span></div>
+              <div class="hud-legend-item"><span class="legend-color legend-light"></span><span>LED Освещение</span></div>
+              <div class="hud-legend-item"><span class="legend-color legend-gate"></span><span>Шлюзы и док</span></div>
+            </div>
+            <div class="hud-hint">Клик по агрегату — инспектор | ЛКМ — вращение | ПКМ — смещение | Колесо — зум</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scenarios and Stress-Tests Strip -->
+    <div class="scenarios-card">
+      <div class="scenarios-title">Сценарии и стресс-тесты:</div>
+      <div class="scenarios-btns">
+        <button class="btn-scenario btn-bms-on" id="btn-toggle-bms" onclick="toggleBMSAutomation()">Автоматика BMS: ВКЛ (PID)</button>
+        <button class="btn-scenario btn-bms-on" id="btn-auto-shift" onclick="toggleAutonomousShift()">Авто-смена: ВКЛ</button>
+        <button class="btn-scenario" id="btn-oven" onclick="toggleOven()">Тест: Открытие печи (+5 °C в З1)</button>
+        <button class="btn-scenario" id="btn-bay" onclick="toggleBay()">Тест: Ворота (+25% Rh)</button>
+        <button class="btn-scenario" id="btn-night" onclick="toggleNight()">Смена: День / Ночь</button>
+        <a href="/api/reports/haccp/csv" class="btn-scenario" style="text-decoration:none; display:inline-flex; align-items:center; background:rgba(14,165,233,0.18); border-color:rgba(56,189,248,0.5); color:var(--blue-light); font-weight:600;" title="Скачать официальный отчет температурного режима для СЭС">Журнал HACCP (CSV)</a>
+      </div>
+    </div>
+
+    <!-- Energy Efficiency & Economic Audit Widget (ВРУ-0.4кВ) -->
+    <div class="energy-card">
+      <div class="energy-hdr">
+        <div class="energy-title-block">
+          <span class="dot-online"></span>
+          <span class="energy-title">Энергоэффективность и аудит (ВРУ-0.4кВ)</span>
+          <span class="energy-subtitle">Алгоритм оптимизации HVAC & VAV</span>
+        </div>
+        <div class="energy-tariff-badge mono" id="energy-tariff-lbl">Тариф: 38.50 ₸ / кВт·ч (ДЕНЬ)</div>
+      </div>
+      <div class="energy-grid mono">
+        <div class="energy-block">
+          <div class="energy-block-lbl"><span>Активная мощность</span><span class="status-badge badge-ok" id="energy-badge-pct">--%</span></div>
+          <div class="energy-block-val" id="energy-actual-val">--.- кВт</div>
+          <div class="energy-block-sub" id="energy-base-val">Базовая: 27.8 кВт</div>
+          <div class="energy-meter-bar"><div class="energy-meter-fill" id="energy-meter-fill" style="width: 50%;"></div></div>
+        </div>
+        <div class="energy-block">
+          <div class="energy-block-lbl"><span>Расход за смену</span><span class="status-badge badge-ok" id="energy-kwh-badge">--%</span></div>
+          <div class="energy-block-val val-blue" id="energy-kwh-val">--.- кВт·ч</div>
+          <div class="energy-block-sub" id="energy-kwh-sub">Без автоматики: --.- кВт·ч</div>
+        </div>
+        <div class="energy-block">
+          <div class="energy-block-lbl"><span>Экономический эффект</span><span style="font-size: 9px; color: var(--text-dim);">Алматы</span></div>
+          <div class="energy-block-val val-amber" id="energy-kzt-val">-- ₸</div>
+          <div class="energy-block-sub" id="energy-rub-val">≈ -- ₽ • Тариф: 38.50 ₸/кВт·ч</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Production Zones Cards Grid -->
+    <div class="zones-grid">
+      <!-- Zone 1: Bakery -->
+      <div class="zone-card" id="card-z1">
+        <div class="zone-hdr">
+          <div>
+            <div class="zone-name">Зона 1: Выпечка</div>
+            <div class="zone-desc">Ротационные жарочные печи</div>
+          </div>
+          <span class="zone-code mono">HR 0000..0003</span>
+        </div>
+        <div class="zone-body">
+          <div class="readout-block">
+            <div class="readout-group">
+              <span class="readout-lbl">Температура</span>
+              <span class="readout-val mono" id="z1-temp" style="color: var(--red-light);">--.- °C</span>
+              <span class="readout-sub">Цель: ~26.0 °C</span>
+            </div>
+            <div class="readout-group" style="text-align: right;">
+              <span class="readout-lbl">Влажность</span>
+              <span class="readout-val mono" id="z1-hum" style="color: var(--teal-light); font-size: 20px;">-- %</span>
+              <span class="readout-sub">Сухой воздух</span>
+            </div>
+          </div>
+
+          <div class="equip-section">
+            <div class="equip-row">
+              <div class="equip-hdr">
+                <span class="equip-name">Вытяжной зонт</span>
+                <span class="equip-pct mono" id="z1-fan-pct">40 %</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" id="z1-fan-bar" style="background: var(--green-light); width: 40%;"></div>
+              </div>
+            </div>
+            <div class="equip-row">
+              <div class="equip-hdr">
+                <span class="equip-name">Створки печей</span>
+                <span class="equip-pct" id="z1-oven-status">Закрыты</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone 2: Chocolate / Glazing (Master Zone) -->
+      <div class="zone-card master-zone" id="card-z2">
+        <div class="zone-hdr">
+          <div>
+            <div class="zone-name" style="color: var(--blue-light);">Зона 2: Глазировка (HACCP)</div>
+            <div class="zone-desc">Линия тортов • Прецизионный климат</div>
+          </div>
+          <span class="zone-code mono">HR 0010..0013</span>
+        </div>
+        <div class="zone-body">
+          <div class="readout-block">
+            <div class="readout-group">
+              <span class="readout-lbl">Температура продукта</span>
+              <span class="readout-val mono" id="z2-temp" style="color: var(--blue-light);">--.- °C</span>
+              <span class="readout-sub">HACCP ККТ-1</span>
+            </div>
+            <div class="readout-group" style="text-align: right;">
+              <span class="readout-lbl">Влажность</span>
+              <span class="readout-val mono" id="z2-hum" style="color: var(--teal-light); font-size: 20px;">-- %</span>
+              <span class="readout-sub">Норма: 45..50 %</span>
+            </div>
+          </div>
+
+          <div class="sp-control">
+            <span>Уставка: <b class="mono" id="z2-sp-val" style="color: var(--text-bright);">19.0 °C</b> <span style="font-size: 10px; color: var(--text-muted);">(норма: 18.5..19.5 °C)</span></span>
+            <div class="stepper-btns">
+              <button class="btn-step" onclick="stepGlazingTemp(-0.5)">-</button>
+              <button class="btn-step" onclick="stepGlazingTemp(+0.5)">+</button>
+            </div>
+          </div>
+
+          <div class="equip-section">
+            <div class="equip-row">
+              <div class="equip-hdr">
+                <span class="equip-name">Прецизионный чиллер</span>
+                <span class="equip-pct mono" id="z2-ac-pct">0 %</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" id="z2-ac-bar" style="background: var(--blue-light); width: 0%;"></div>
+              </div>
+            </div>
+            <div class="equip-row">
+              <div class="equip-hdr">
+                <span class="equip-name">Пароувлажнитель</span>
+                <span class="equip-pct mono" id="z2-hum-pct">0 %</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" id="z2-hum-bar" style="background: var(--teal-light); width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:8px; padding:6px 10px; background:rgba(15,23,42,0.65); border:1px solid rgba(56,189,248,0.25); border-radius:5px; display:flex; align-items:center; justify-content:space-between;">
+            <div><span style="font-size:11px; font-weight:600; color:var(--blue-light);">Журнал СЭС: </span><span style="font-size:10px; color:var(--green-light);" id="haccp-db-summary">100% норма (24ч)</span></div>
+            <a href="/api/reports/haccp/csv" class="btn-step" style="text-decoration:none; padding:3px 8px; font-size:10px; background:rgba(2,132,199,0.25); color:#fff; border:1px solid var(--blue-light); border-radius:4px;">Выгрузить CSV</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone 3: Storage -->
+      <div class="zone-card" id="card-z3">
+        <div class="zone-hdr">
+          <div>
+            <div class="zone-name">Зона 3: Склад муки</div>
+            <div class="zone-desc">Стеллажи сырья и разгрузочный док</div>
+          </div>
+          <span class="zone-code mono">HR 0020..0023</span>
+        </div>
+        <div class="zone-body">
+          <div class="readout-block">
+            <div class="readout-group">
+              <span class="readout-lbl">Влажность склада</span>
+              <span class="readout-val mono" id="z3-hum" style="color: var(--teal-light);">-- %</span>
+              <span class="readout-sub">Предел: строго &lt; 50 %</span>
+            </div>
+            <div class="readout-group" style="text-align: right;">
+              <span class="readout-lbl">Температура</span>
+              <span class="readout-val mono" id="z3-temp" style="color: var(--text-bright); font-size: 20px;">--.- °C</span>
+              <span class="readout-sub">Без жестких норм</span>
+            </div>
+          </div>
+
+          <div class="equip-section">
+            <div class="equip-row">
+              <div class="equip-hdr">
+                <span class="equip-name">Осушитель воздуха</span>
+                <span class="equip-pct mono" id="z3-dehum-pct">0 %</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" id="z3-dehum-bar" style="background: var(--teal-light); width: 0%;"></div>
+              </div>
+            </div>
+            <div class="equip-row">
+              <div class="equip-hdr">
+                <span class="equip-name">Разгрузочные ворота</span>
+                <span class="equip-pct" id="z3-bay-status">Закрыты</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lower Section: Oscilloscope and Audit Log -->
+    <div class="lower-grid">
+      <div class="lower-panel">
+        <div class="lower-hdr">
+          <span>Осциллограф параметров климата</span>
+          <div class="chart-legend mono">
+            <span class="leg-item leg-z1">Зона 1: Печи (°C)</span>
+            <span class="leg-item leg-z2">Зона 2: Шоколад (°C)</span>
+            <span class="leg-item leg-sp">Уставка Z2</span>
+            <span class="leg-item leg-z3">Зона 3: Мука (%)</span>
+          </div>
+        </div>
+        <canvas id="telemetryChart"></canvas>
+      </div>
+
+      <div class="lower-panel">
+        <div class="lower-hdr">
+          <span>Журнал событий и телеграмм</span>
+          <span class="log-capacity mono">Буфер: 30</span>
+        </div>
+        <div class="log-box mono" id="event-log-box"></div>
+      </div>
+    </div>
+
+    <!-- Industrial BMS Edge Gateway & Architecture Core Section -->
+    <div class="edge-core-card mono">
+      <div class="edge-core-hdr">
+        <div class="edge-core-title-block">
+          <span class="dot-online"></span>
+          <span class="edge-core-title">BMS Edge Controller & Архитектура ядра</span>
+          <span class="edge-core-subtitle">Локальный ПИД-шлюз реального времени • Modbus TCP 5020 • 100% Автономность</span>
+        </div>
+        <span class="edge-status-pill">ПИД-ЦИКЛ: 1.0 с • WATCHDOG: АКТИВЕН</span>
+      </div>
+      <div class="edge-pipeline">
+        <div class="pipe-step"><div class="pipe-box"><div class="pipe-title">1. Полевой уровень (I/O)</div><div class="pipe-val">Pt100, VAV, AC-201, EF-101</div></div><span class="pipe-arrow">▶</span></div>
+        <div class="pipe-step"><div class="pipe-box"><div class="pipe-title">2. Промышленная шина</div><div class="pipe-val">Modbus TCP 5020 / RS-485</div></div><span class="pipe-arrow">▶</span></div>
+        <div class="pipe-step"><div class="pipe-box"><div class="pipe-title">3. Edge Runtime Core</div><div class="pipe-val">Python AsyncIO + PID HACCP</div></div><span class="pipe-arrow">▶</span></div>
+        <div class="pipe-step"><div class="pipe-box"><div class="pipe-title">4. Диспетчеризация</div><div class="pipe-val">3D BIM WebGL + SCADA HUD</div></div></div>
+      </div>
+      <div class="edge-body-grid">
+        <div class="edge-3d-wrapper">
+          <div class="edge-3d-hdr"><span class="edge-3d-title">3D-модель контроллера Advantech IPC (DIN-Rail)</span><span class="edge-3d-tip">Вращайте мышкой 360° • Кликните по разъему</span></div>
+          <div id="edge-3d-canvas-container" class="edge-3d-canvas-container"></div>
+          <div class="edge-3d-controls-bar">
+            <button class="part-btn active" id="btn-part-overview" onclick="selectEdgePart('overview')">0. Общий вид</button>
+            <button class="part-btn" id="btn-part-rs485" onclick="selectEdgePart('rs485')">1. Порт RS-485</button>
+            <button class="part-btn" id="btn-part-cpu" onclick="selectEdgePart('cpu')">2. IPC Core</button>
+            <button class="part-btn" id="btn-part-io" onclick="selectEdgePart('io')">3. Выходы 0-10В</button>
+            <button class="part-btn" id="btn-part-pwr" onclick="selectEdgePart('pwr')">4. Watchdog 24V</button>
+          </div>
+        </div>
+        <div class="edge-interactive-code">
+          <div class="code-flow-hdr"><span class="code-flow-title" id="edge-flow-title">0. Общий вид — Advantech IPC (DIN-рейка TS 35)</span><span class="code-flow-pill" id="edge-flow-pill">360° ОБЗОР • СВОБОДНО</span></div>
+          <pre class="code-flow-pre" id="edge-flow-code"></pre>
+          <div class="code-flow-explain" id="edge-flow-desc">Контроллер циклически считывает регистры Pt100 температуры шоколада и печей.</div>
+          <div class="code-flow-telemetry">
+            <div class="flow-data-item"><span>Статус порта:</span><b id="flow-status">Опрос 1000 мс</b></div>
+            <div class="flow-data-item"><span>Живой регистр:</span><b id="flow-reg">HR:0010 = 19.2 °C</b></div>
+            <div class="flow-data-item"><span>Действие:</span><b id="flow-act">Считывание Pt100</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modular 3D BIM Subsystems & SCADA Engines -->
+  <script src="/static/js/bim/bim-state.js"></script><script src="/static/js/bim/bim-modes.js"></script><script src="/static/js/bim/bim-lighting.js"></script>
+  <script src="/static/js/bim/bim-structure.js"></script><script src="/static/js/bim/bim-hvac.js"></script><script src="/static/js/bim/bim-equipment.js"></script>
+  <script src="/static/js/bim/bim-chiller.js"></script><script src="/static/js/bim/bim-edge-cabinet.js"></script><script src="/static/js/bim/bim-cabinets.js"></script><script src="/static/js/bim/bim-coldroom.js"></script><script src="/static/js/bim/bim-personnel.js"></script>
+  <script src="/static/js/bim/bim-interaction.js"></script><script src="/static/js/bim-scene.js"></script><script src="/static/js/energy.js"></script>
+  <script src="/static/js/chart.js"></script><script src="/static/js/telemetry.js"></script><script src="/static/js/edge-3d-models.js"></script><script src="/static/js/edge-3d-viewer.js"></script><script src="/static/js/edge-core.js"></script>
+</body>
+</html>

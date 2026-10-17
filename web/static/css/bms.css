@@ -1,0 +1,12 @@
+/* =========================================================================
+   BMS SCADA Industrial Style & Modern Digital Twin UI
+   Entry Point Stylesheet (Max 300-400 Lines Rule compliant)
+   ========================================================================= */
+
+@import url("./components/base.css");
+@import url("./components/bim-viewport.css");
+@import url("./components/inspector.css");
+@import url("./components/zones.css");
+@import url("./components/charts.css");
+@import url("./components/energy.css");
+@import url("./components/edge-core.css");

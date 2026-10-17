@@ -1,0 +1,137 @@
+/* =========================================================================
+   BMS SCADA - Energy Efficiency & Economic Audit Widget (ВРУ-0.4кВ)
+   ========================================================================= */
+
+.energy-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.energy-hdr {
+  background: var(--panel-hdr);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.energy-title-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.energy-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-bright);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.energy-subtitle {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.energy-tariff-badge {
+  font-size: 10px;
+  color: var(--blue-light);
+  background: var(--blue-bg);
+  border: 1px solid rgba(56, 139, 253, 0.3);
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+.energy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+@media (max-width: 960px) {
+  .energy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.energy-block {
+  background: #090c10;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.energy-block-lbl {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.energy-block-val {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text-bright);
+}
+
+.energy-block-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.val-green {
+  color: var(--green-light);
+}
+
+.val-blue {
+  color: var(--blue-light);
+}
+
+.val-amber {
+  color: var(--amber-light);
+}
+
+.energy-meter-bar {
+  background: #161b22;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.energy-meter-fill {
+  height: 100%;
+  width: 50%;
+  background: var(--blue-light);
+  border-radius: 2px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.val-red {
+  color: var(--red-light);
+}
+
+.energy-card.legacy-mode {
+  border-color: rgba(248, 81, 73, 0.45);
+}
+
+.energy-card.legacy-mode .energy-tariff-badge {
+  background: var(--red-bg);
+  border-color: rgba(248, 81, 73, 0.45);
+  color: var(--red-light);
+}

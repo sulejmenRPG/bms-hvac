@@ -1,0 +1,176 @@
+/* =========================================================================
+   BMS SCADA - Floating Equipment Inspector Panel
+   ========================================================================= */
+
+.bim-inspector {
+  position: absolute;
+  top: 48px;
+  right: 12px;
+  width: 340px;
+  background: rgba(15, 20, 28, 0.96);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--blue-light);
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  z-index: 25;
+  pointer-events: auto;
+  display: none;
+  flex-direction: column;
+  animation: fadeInInsp 0.15s ease-out;
+}
+
+@keyframes fadeInInsp {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.inspector-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.inspector-title-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  flex: 1;
+}
+
+.inspector-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue-light);
+  display: inline-block;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.inspector-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-bright);
+  line-height: 1.35;
+}
+
+.btn-inspector-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 1px 4px;
+  line-height: 1;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.btn-inspector-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-bright);
+}
+
+.inspector-zone {
+  font-size: 10px;
+  color: var(--blue-light);
+  font-weight: 500;
+  padding: 3px 12px;
+  background: var(--blue-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.inspector-body {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.inspector-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.inspector-lbl {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.inspector-val {
+  font-weight: 600;
+  color: var(--text-bright);
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Dedicated Telemetry Readout Card */
+.inspector-telem-card {
+  background: #090c10;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inspector-telem-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.inspector-telem-val {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--blue-light);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.inspector-desc {
+  font-size: 10.5px;
+  color: var(--text);
+  line-height: 1.4;
+  background: #090c10;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.inspector-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.btn-inspector-action {
+  background: #21262d;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-bright);
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.btn-inspector-action:hover {
+  background: var(--blue);
+  border-color: var(--blue-light);
+}

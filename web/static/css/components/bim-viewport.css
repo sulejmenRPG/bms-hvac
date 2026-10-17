@@ -1,0 +1,302 @@
+/* =========================================================================
+   BMS SCADA - 3D BIM Viewport, Camera Controls & HUD Overlays
+   ========================================================================= */
+
+.bim-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bim-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bim-title-block {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.dot-active {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green-light);
+  display: inline-block;
+}
+
+.map-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+.bim-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.bim-controls-bar {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.btn-cam {
+  background: #161b22;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.btn-cam:hover {
+  background: #21262d;
+  color: var(--text-bright);
+  border-color: var(--border-subtle);
+}
+.btn-cam.active {
+  background: rgba(31, 111, 235, 0.15);
+  border-color: var(--blue-light);
+  color: var(--blue-light);
+  font-weight: 600;
+}
+
+.bim-viewport-wrapper {
+  position: relative;
+  width: 100%;
+  height: 640px;
+  background: #06090e;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#bimCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+#bimCanvas:active {
+  cursor: grabbing;
+}
+
+/* =========================================================================
+   Floating HUD Overlays
+   ========================================================================= */
+.bim-hud-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+
+.bim-hud-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.hud-quick-strip {
+  background: rgba(13, 17, 23, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(48, 54, 61, 0.7);
+  border-radius: 4px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+  font-size: 11px;
+}
+
+.quick-zone-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quick-zone-name {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.quick-zone-val {
+  color: var(--text-bright);
+  font-weight: 600;
+}
+
+.quick-zone-sub {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.quick-sep {
+  width: 1px;
+  height: 12px;
+  background: var(--border-subtle);
+}
+
+.dot-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-red { background: var(--red-light); }
+.dot-blue { background: var(--blue-light); }
+.dot-teal { background: var(--teal-light); }
+
+.hud-status-chip {
+  background: rgba(13, 17, 23, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(48, 54, 61, 0.7);
+  border-radius: 4px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.hud-status-text {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.hud-modes-strip {
+  background: rgba(13, 17, 23, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(48, 54, 61, 0.75);
+  border-radius: 4px;
+  padding: 3px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.hud-modes-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-right: 2px;
+}
+
+.btn-mode {
+  background: #161b22;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.btn-mode:hover {
+  background: #21262d;
+  color: var(--text-bright);
+  border-color: var(--border-subtle);
+}
+
+.btn-mode.active {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: var(--blue-light);
+  color: var(--blue-light);
+  font-weight: 600;
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.25);
+}
+
+.bim-hud-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hud-legend {
+  background: rgba(13, 17, 23, 0.85);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(48, 54, 61, 0.7);
+  border-radius: 4px;
+  padding: 4px 10px;
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  color: var(--text-muted);
+  pointer-events: auto;
+}
+
+.hud-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-color {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.legend-vav { background: #10b981; }
+.legend-duct { background: #475569; }
+.legend-diff { background: #0284c7; }
+.legend-panel { background: #b0b8c4; }
+.legend-light { background: #f8fafc; box-shadow: 0 0 4px rgba(255, 255, 255, 0.4); }
+.legend-gate { background: #d97706; }
+
+.hud-hint {
+  font-size: 10px;
+  color: var(--text-dim);
+  background: rgba(13, 17, 23, 0.7);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(48, 54, 61, 0.4);
+  pointer-events: auto;
+}
+
+/* Hover Tooltip */
+.bim-hover-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(13, 17, 23, 0.95);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-bright);
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  z-index: 30;
+  display: none;
+  transform: translate(-50%, -130%);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
