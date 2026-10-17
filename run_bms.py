@@ -35,20 +35,26 @@ async def main():
     room_task = asyncio.create_task(start_climate_room(stop_event))
     await asyncio.sleep(1.0)
 
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    host = os.environ.get("HOST", "0.0.0.0")
+
     # 2. Настройка Uvicorn веб-сервера
     config = uvicorn.Config(
         app=app,
-        host="127.0.0.1",
-        port=8000,
-        log_level="warning"
+        host=host,
+        port=port,
+        log_level="info"
     )
     server = uvicorn.Server(config)
 
-    # 3. Открываем браузер через секунду после запуска
+    # 3. Открываем браузер локально (если не в облаке Render)
     async def open_browser():
+        if os.environ.get("RENDER") or not sys.stdin.isatty():
+            return
         await asyncio.sleep(1.5)
-        print("[BMS] Веб-панель оператора доступна: http://127.0.0.1:8000")
-        webbrowser.open("http://127.0.0.1:8000")
+        print(f"[BMS] Веб-панель оператора доступна: http://127.0.0.1:{port}")
+        webbrowser.open(f"http://127.0.0.1:{port}")
 
     asyncio.create_task(open_browser())
 
